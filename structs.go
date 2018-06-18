@@ -21,10 +21,10 @@ type Calendar struct {
 	//Components
 	Events []*Event
 	//TODO
-	//	ToDos           []ToDo
-	//	Journals        []Journal
-	//	FreeBusyTimes   []FreeBusy
-	//	TimeZones       []TimeZone
+	//	ToDos           []*ToDo
+	Journals []*Journal
+	FreeBusy []*FreeBusy
+	//	TimeZones       []*TimeZone
 	OtherComponents []*im.Component
 	//Properties
 	//required
@@ -262,7 +262,7 @@ func ToRecurrenceSetVal(line *icalparser.ContentLine) (out RecurrenceSetVal, err
 	out = RecurrenceSetVal{
 		From:         nil,
 		For:          nil,
-		Floating:     !strings.HasSuffix(line.Value.C, "Z"),
+		Floating:     !strings.Contains(line.Value.C, "Z"),
 		OnlyDate:     false,
 		OnlyDateTime: false,
 		OtherParam:   nil,
@@ -297,17 +297,12 @@ func ToRecurrenceSetVal(line *icalparser.ContentLine) (out RecurrenceSetVal, err
 			out.From = append(out.From, date)
 
 		case tPeriod:
-			out.OnlyDateTime = true
-			vals := strings.SplitN(val, "/", 2)
-			date1, err := time.Parse(util.ISO8601_2004, strings.Trim(vals[0], "Z"))
-			date2, err := time.Parse(util.ISO8601_2004, strings.Trim(vals[0], "Z"))
-			if err != nil {
-				return out, err
+			x1, x2, er := util.ParsePeriod(val)
+			if er != nil {
+				return out, er
 			}
-
-			out.From = append(out.From, date1)
-			out.For = append(out.For, date2.Sub(date1))
-
+			out.From = append(out.From, x1)
+			out.For = append(out.For, x2)
 		default:
 			err = errors.New("Not a valid Type: " + vtype + " in: " + line.String())
 			return
@@ -521,6 +516,37 @@ func ToTriggerVal(line *icalparser.ContentLine) (out TriggerVal, err, err2 error
 		err = errors.New("Unexpected Value type '" + valtype + "': " + line.String())
 	}
 	return
+}
+
+type FBVal struct {
+	From   []time.Time
+	For    []time.Duration
+	FBType string
+
+	OtherParam []*icalparser.Param
+}
+
+//TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
+func ToFBVal(line *icalparser.ContentLine) (out FBVal, err error) {
+	//todo 	tstr := strings.Trim(line.Value.C, "Z")
+	out = FBVal{}
+	for _, param := range line.Param {
+		switch strings.ToLower(param.ParamName.C) {
+		case paFBType:
+			out.FBType = param.ParamValues[0].C
+		default:
+			out.OtherParam = append(out.OtherParam, param)
+		}
+	}
+	for _, val := range strings.Split(line.Value.C, ",") {
+		x1, x2, er := util.ParsePeriod(val)
+		if er != nil {
+			return out, er
+		}
+		out.From = append(out.From, x1)
+		out.For = append(out.For, x2)
+	}
+	return out, err
 }
 
 type StatusVal StringVal

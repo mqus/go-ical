@@ -86,7 +86,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 		case prColor:
 			x := ToColorVal(prop)
 			out.Color = &x
-		case "NAME":
+		case prName:
 			x, err := ToTextVal(prop)
 			if err != nil {
 				//MAYBE return err
@@ -130,20 +130,46 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			x, err, err2 := parseVEVENT(comp)
 			if err != nil {
 				//MAYBE return err
-				// instead of silently discarding Image
+				// instead of silently discarding EVENT
 			} else {
 				if err2 != nil {
 					//MAYBE return err
-					// instead of silently discarding altrep
+					// instead of silently discarding subcomponents/properties
 				}
 				out.Events = append(out.Events, x)
 			}
-		case vFB:
-			fallthrough //TODO Free/Busy
-		case vJnl:
-			fallthrough //TODO Journal
+
 		case vTODO:
-			fallthrough //TODO todo
+			out.OtherComponents = append(out.OtherComponents, comp)
+
+			//TODO todo
+
+		case vJnl:
+			x, err, err2 := parseVJOURNAL(comp)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding JOURNAL
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding subcomponents/properties
+				}
+				out.Journals = append(out.Journals, x)
+			}
+
+		case vFB:
+			x, err, err2 := parseVFREEBUSY(comp)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding FREEBUSY
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding subcomponents/properties
+				}
+				out.FreeBusy = append(out.FreeBusy, x)
+			}
+
 		case vTZ:
 			fallthrough //TODO TimeZone
 		default:

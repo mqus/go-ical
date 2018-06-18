@@ -99,3 +99,22 @@ func parseDay(s string) (time.Duration, error) {
 	}
 
 }
+
+func ParsePeriod(s string) (from time.Time, dur time.Duration, err error) {
+	vals := strings.SplitN(s, "/", 2)
+	from, err = time.Parse(ISO8601_2004, strings.Trim(vals[0], "Z"))
+	if err != nil {
+		return time.Time{}, 0, err
+	}
+	if strings.Contains(vals[1], "P") {
+		dur, err = ParseDuration(vals[1])
+	} else {
+		date2, err := time.Parse(ISO8601_2004, strings.Trim(vals[1], "Z"))
+		if err != nil {
+			return time.Time{}, 0, err
+		}
+		dur = date2.Sub(from)
+	}
+
+	return
+}

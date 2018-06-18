@@ -8,9 +8,9 @@ This is a work in Progress:
   - [x] VEVENT
     - [x] Properties
     - [x] VALARM
-  - [ ] VJOURNAL
+  - [x] VJOURNAL
   - [ ] VTODO
-  - [ ] VFREEBUSY
+  - [x] VFREEBUSY
   - [ ] VTIMEZONE
     - [ ] implement timezoning in other components
 - [ ] replace structural parser

@@ -26,6 +26,7 @@ type Alarm struct {
 	Attachments []*DataVal
 
 	OtherProperties []*icalparser.ContentLine
+	OtherComponents []*im.Component
 }
 
 func parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
@@ -104,7 +105,7 @@ func parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
 			out.OtherProperties = append(out.OtherProperties, prop)
 		}
 	}
-
+	out.OtherComponents = comp.Comps
 	//TODO Conformance-checks:
 	// check if dur is set <=> repeat is set
 	// check if Desc/Summary/Attendee is set
