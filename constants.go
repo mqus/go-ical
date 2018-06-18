@@ -37,7 +37,7 @@ const (
 	prDTStart = "dtstart"
 	prDur     = "duration"
 	prFB      = "freebusy"
-	prTransp  = "transp"
+	prTTransp = "transp"
 	// time zone
 	prTZid   = "tzid"
 	prTZName = "tzname"

@@ -17,7 +17,7 @@ type Event struct {
 	//Warning: Look at param VALUE, maybe only date is important (VALUE=DATE)
 	DTStart DateTimeVal
 	//optional
-	Class     *TextVal
+	Class     *StringVal
 	Created   *DateTimeVal
 	Desc      *TextVal
 	Geo       *GeoVal
@@ -26,43 +26,45 @@ type Event struct {
 	Organizer *PersonVal
 	Priority  *IntVal
 	Seq       *IntVal
-	Status    *TextVal
+	Status    *StatusVal
 	Summary   *TextVal
-	Transp    *BoolVal
+	Transp    *TTranspVal
 	URL       *URIVal
 	//more complexity hidden here
-	RecurID TextVal
+	RecurID *RecurIDVal
 
-	RRule RecurrentRule
+	RRule *RecurrentRule
 
 	//use only either one of DTEnd or DTDuration
 
 	//Warning: Look at param VALUE, maybe only date is important (VALUE=DATE)
-	DTEnd      DateTimeVal
-	DTDuration DurVal
+	DTEnd      *DateTimeVal
+	DTDuration *DurVal
 
 	//optional, multiple
-	Attachments []DataVal
+	Attachments []*DataVal
 	//Look at param for the type of attendee
-	Attendee   []PersonVal
-	Categories []Categories
-	Comment    []TextVal
-	Contact    []TextVal
+	Attendee   []*PersonVal
+	Categories []*Categories
+	Comment    []*TextVal
+	Contact    []*TextVal
 	//Warning: Look at param VALUE, maybe only date is important (VALUE=DATE)
-	ExDate  []DateTimeVal
-	RStatus []StatusVal
+	ExDate []*DateTimeVal
+
+	RStatus []*ReqStatusVal
+
 	//maybe important param: RELTYPE, specified in RFC5545/3.2.15
-	Related []TextVal
+	Related []*RelationVal
 	//in this case a single TextVal can also be multiple comma-separated resources.
-	Resources []TextVal
+	Resources []*TextVal
 	//Warning: Look at param VALUE, maybe only date/datetime is important (VALUE=DATE)
-	RDate           []PeriodVal
+	RDate           []*RecurrenceSetVal
 	OtherProperties []*icalparser.ContentLine
 	OtherComponents []*im.Component
 	//since RFC 7986:
 	Color      *ColorVal
 	Images     []*DataVal
-	Conference []*URIVal
+	Conference []*ConferenceVal
 }
 
 func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
@@ -79,8 +81,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prUid:
-			x := ToStringVal(prop)
-			out.Uid = x
+			out.Uid = ToStringVal(prop)
 
 		case prDTStart:
 			x, err := ToDateTimeVal(prop, false)
@@ -88,14 +89,22 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 				//MAYBE return err
 				// instead of silently discarding DTStart
 			} else {
-				out.DTStamp = x
+				out.DTStart = x
 			}
 
 		case prClass:
-			fallthrough //TODO
+			x := ToStringVal(prop)
+			out.Class = &x
 
 		case prCreated:
-			fallthrough //TODO
+			x, err := ToDateTimeVal(prop, false)
+			if err != nil {
+				//Error while parsing
+				//MAYBE return err
+				// instead of silently discarding Created
+			} else {
+				out.Created = &x
+			}
 
 		case prDesc:
 			x, err := ToTextVal(prop)
@@ -107,7 +116,13 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			//out.Desc = append(out.Desc, x)
 
 		case prGeo:
-			fallthrough //TODO
+			x, err := ToGeoVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Geo
+			} else {
+				out.Geo = &x
+			}
 
 		case prLastMod:
 			x, err := ToDateTimeVal(prop, true)
@@ -119,25 +134,59 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prLoc:
-			fallthrough //TODO
+			x, err := ToTextVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding altrep
+			}
+			out.Location = &x
 
 		case prOrganizer:
-			fallthrough //TODO
+			x, err, err2 := ToPersonVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Organizer
+			} else {
+				if err2 != nil {
+					//MAYBE return err2
+					// instead of silently discarding parameters
+				}
+				out.Organizer = &x
+			}
 
 		case prPrio:
-			fallthrough //TODO
+			x, err := ToIntVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Priority
+			} else {
+				out.Priority = &x
+			}
 
 		case prSeq:
-			fallthrough //TODO
+			x, err := ToIntVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Seq
+			} else {
+				out.Seq = &x
+			}
 
 		case prStat:
-			fallthrough //TODO
+			x := StatusVal(ToStringVal(prop))
+			out.Status = &x
 
 		case prSumm:
-			fallthrough //TODO
+			x, err := ToTextVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding altrep
+			}
+			out.Summary = &x
 
-		case prTransp:
-			fallthrough //TODO
+		case prTTransp:
+			x := TTranspVal(ToStringVal(prop))
+			out.Transp = &x
 
 		case prURL:
 			x, err := ToURIVal(prop)
@@ -149,46 +198,120 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prRid:
-			fallthrough //TODO
+			x, err := ToDateTimeVal(prop, false)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding RecurrenceID
+			} else {
+				y := RecurIDVal(x)
+				out.RecurID = &y
+			}
 
 		case prRRule:
-			fallthrough //TODO
+			x := RecurrentRule(ToStringVal(prop))
+			out.RRule = &x
 
 		case prDTEnd:
-			fallthrough //TODO
+			x, err := ToDateTimeVal(prop, false)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding DTEnd
+			} else {
+				out.DTEnd = &x
+			}
 
 		case prDur:
-			fallthrough //TODO
+			x, err := ToDurVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Duration
+			} else {
+				out.DTDuration = &x
+			}
 
 		case prAttach:
-			fallthrough //TODO
+			x, err, err2 := ToDataVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Attachment
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding altrep
+				}
+				out.Attachments = append(out.Attachments, &x)
+			}
 
 		case prAttendee:
-			fallthrough //TODO
+			x, err, err2 := ToPersonVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding Attendee
+			} else {
+				if err2 != nil {
+					//MAYBE return err2
+					// instead of silently discarding parameters
+				}
+				out.Attendee = append(out.Attendee, &x)
+			}
 
 		case prCat:
-			out.Categories = append(out.Categories, ToCategVal(prop))
+			x := ToCategVal(prop)
+			out.Categories = append(out.Categories, &x)
 
 		case prComm:
-			fallthrough //TODO
+			x, err := ToTextVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding altrep
+			}
+			out.Comment = append(out.Comment, &x)
 
 		case prContact:
-			fallthrough //TODO
+			x, err := ToTextVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding altrep
+			}
+			out.Contact = append(out.Contact, &x)
 
 		case prExcDate:
-			fallthrough //TODO
+			x, err := ToDateTimeVal(prop, false)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding ExceptionDate
+			} else {
+				out.ExDate = append(out.ExDate, &x)
+			}
 
 		case prReqStat:
-			fallthrough //TODO
-
+			x, err := ToReqStatusVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding ReqStatus
+			} else {
+				out.RStatus = append(out.RStatus, &x)
+			}
 		case prRelTo:
-			fallthrough //TODO
+			x := RelationVal(ToStringVal(prop))
+			out.Related = append(out.Related, &x)
 
 		case prRes:
-			fallthrough //TODO
+			x, err := ToTextVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding altrep
+			}
+			out.Resources = append(out.Resources, &x)
 
 		case prRDate:
-			fallthrough //TODO
+			x, err := ToRecurrenceSetVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding ExceptionDate
+			} else {
+				out.RDate = append(out.RDate, &x)
+			}
 
 		case prColor:
 			x := ToColorVal(prop)
@@ -208,7 +331,18 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prConf:
-			fallthrough //TODO
+			x, err, err2 := ToConferenceVal(prop)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding ConferenceVal
+			} else {
+				if err2 != nil {
+					//MAYBE return err2
+					// instead of silently ignoring value type
+				}
+				out.Conference = append(out.Conference, &x)
+			}
+
 		default:
 			out.OtherProperties = append(out.OtherProperties, prop)
 		}
