@@ -9,7 +9,7 @@ This is a work in Progress:
     - [x] Properties
     - [x] VALARM
   - [x] VJOURNAL
-  - [ ] VTODO
+  - [x] VTODO
   - [x] VFREEBUSY
   - [ ] VTIMEZONE
     - [ ] implement timezoning in other components

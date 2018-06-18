@@ -13,6 +13,10 @@ type CalParser struct {
 	inner *icalparser.Parser
 }
 
+type ICalOutputter interface {
+	OutputICal() string
+}
+
 func NewParser(reader io.Reader) CalParser {
 	return CalParser{icalparser.NewParser(reader)}
 }
@@ -140,9 +144,17 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vTODO:
-			out.OtherComponents = append(out.OtherComponents, comp)
-
-			//TODO todo
+			x, err, err2 := parseVTODO(comp)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding EVENT
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding subcomponents/properties
+				}
+				out.ToDos = append(out.ToDos, x)
+			}
 
 		case vJnl:
 			x, err, err2 := parseVJOURNAL(comp)

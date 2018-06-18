@@ -19,11 +19,11 @@ import (
 
 type Calendar struct {
 	//Components
-	Events []*Event
-	//TODO
-	//	ToDos           []*ToDo
+	Events   []*Event
+	ToDos    []*ToDo
 	Journals []*Journal
 	FreeBusy []*FreeBusy
+	//TODO
 	//	TimeZones       []*TimeZone
 	OtherComponents []*im.Component
 	//Properties
@@ -48,7 +48,6 @@ type Calendar struct {
 }
 
 //Property Value Types
-
 type TextVal struct {
 	Value  string
 	AltRep *url.URL
