@@ -141,8 +141,7 @@ func ToDurVal(line *icalparser.ContentLine) (DurVal, error) {
 	var err error
 	out := DurVal{}
 	out.OtherParam = line.Param
-	out.Value, err = time.ParseDuration(line.Value.C)
-
+	out.Value, err = util.ParseDuration(line.Value.C)
 	//idx := util.GetParam(line.Param, "VALUE")
 	//if err!=nil && idx<0 || line.Param[idx].ParamValues[0].C !="DURATION"{
 	//	//MAYBE VALUE=DURATION is theoretically required
@@ -471,6 +470,55 @@ func ToConferenceVal(line *icalparser.ContentLine) (out ConferenceVal, err, err2
 	}
 	if valtype != "URI" {
 		err2 = errors.New("VALUE must be defined as URI: " + line.String())
+	}
+	return
+}
+
+type TriggerVal struct {
+	IsRelative bool
+	Delay      *time.Duration
+	Time       *time.Time
+	RelToEnd   bool
+	OtherParam []*icalparser.Param
+}
+
+func ToTriggerVal(line *icalparser.ContentLine) (out TriggerVal, err, err2 error) {
+	out = TriggerVal{
+		IsRelative: false,
+		Delay:      nil,
+		Time:       nil,
+		RelToEnd:   false,
+		OtherParam: nil,
+	}
+	valtype := tDur
+	//parse parameters
+	for _, param := range line.Param {
+		pval := param.ParamValues[0].C
+		switch strings.ToLower(param.ParamName.C) {
+		case paValue:
+			valtype = strings.ToLower(pval)
+		case paTrRel:
+			val := strings.ToLower(pval)
+			if val == "end" {
+				out.RelToEnd = true
+			} else if val != "start" {
+				err2 = errors.New("RELATED - property must be START or END but was " + val + ": " + line.String())
+			}
+		default:
+			out.OtherParam = append(out.OtherParam, param)
+		}
+	}
+	if valtype == tDur {
+		out.IsRelative = true
+		x, err1 := util.ParseDuration(line.Value.C)
+		out.Delay = &x
+		err = err1
+	} else if valtype == tDateTime {
+		x, err1 := time.Parse(util.ISO8601_2004, strings.Trim(line.Value.C, "Z"))
+		out.Time = &x
+		err = err1
+	} else {
+		err = errors.New("Unexpected Value type '" + valtype + "': " + line.String())
 	}
 	return
 }

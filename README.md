@@ -5,9 +5,9 @@ a library for parsing icalendar formatted data
 This is a work in Progress:
 ### TODO:
 - [ ] parsing of subcomponents
-  - [ ] VEVENT (90%)
+  - [x] VEVENT
     - [x] Properties
-    - [ ] VALARM
+    - [x] VALARM
   - [ ] VJOURNAL
   - [ ] VTODO
   - [ ] VFREEBUSY

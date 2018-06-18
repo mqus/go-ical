@@ -8,7 +8,7 @@ import (
 )
 
 type Event struct {
-	Alarms []Alarm
+	Alarms []*Alarm
 	//required:
 	DTStamp DateTimeVal
 	Uid     StringVal
@@ -349,10 +349,24 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 
 	}
 
+	for _, subcomp := range comp.Comps {
+		switch strings.ToLower(subcomp.Name) {
+		case vAl:
+			al, e1, e2 := parseVALARM(subcomp)
+			if e1 != nil {
+				//MAYBE return err
+				// instead of silently discarding Alarm component
+			} else {
+				if e2 != nil {
+					//MAYBE return err2
+					// instead of silently ignoring property
+				}
+				out.Alarms = append(out.Alarms, &al)
+			}
+		default:
+			out.OtherComponents = append(out.OtherComponents, subcomp)
+		}
+	}
+	//TODO Conformance Checking
 	return
-}
-
-type Alarm struct {
-	//TODO
-	OtherProperties []icalparser.ContentLine
 }

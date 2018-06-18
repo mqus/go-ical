@@ -82,7 +82,7 @@ const (
 	paMbr      = "member"
 	paPartStat = "partstat"
 	paRange    = "range"
-	paRel      = "related"
+	paTrRel    = "related"
 	paRelType  = "reltype"
 	paRole     = "role"
 	paRSVP     = "rsvp"
