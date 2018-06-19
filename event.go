@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/mqus/go-ical/im"
-	"github.com/soh335/icalparser"
 )
 
 type Event struct {
@@ -58,7 +57,7 @@ type Event struct {
 	//in this case a single TextVal can also be multiple comma-separated resources.
 	Resources       []*TextVal
 	RDate           []*RecurrenceSetVal
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 
 	//since RFC 7986:
 	Color      *ColorVal
@@ -69,7 +68,7 @@ type Event struct {
 func (cp *CalParser) parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 	out = &Event{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prDTStamp:
 			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {

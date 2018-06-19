@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/mqus/go-ical/im"
-	"github.com/soh335/icalparser"
 )
 
 type ToDo struct {
@@ -59,7 +58,7 @@ type ToDo struct {
 	//in this case a single TextVal can also be multiple comma-separated resources.
 	Resources       []*TextVal
 	RDate           []*RecurrenceSetVal
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 	OtherComponents []*im.Component
 
 	//since RFC 7986:
@@ -71,7 +70,7 @@ type ToDo struct {
 func (cp *CalParser) parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 	out = &ToDo{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prDTStamp:
 			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {

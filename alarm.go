@@ -1,10 +1,7 @@
 package go_ical
 
 import (
-	"strings"
-
 	"github.com/mqus/go-ical/im"
-	"github.com/soh335/icalparser"
 )
 
 // implements VALARM, specified in RFC5545, Section 3.6.6
@@ -25,14 +22,14 @@ type Alarm struct {
 	//Optional, at most one if ACTION=AUDIO
 	Attachments []*DataVal
 
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 	OtherComponents []*im.Component
 }
 
 func (cp *CalParser) parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
 	out = &Alarm{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prAction:
 			out.Action = ToStringVal(prop)
 		case prTrigger:

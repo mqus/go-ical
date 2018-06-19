@@ -14,7 +14,6 @@ import (
 
 	"github.com/mqus/go-ical/im"
 	"github.com/mqus/go-ical/util"
-	"github.com/soh335/icalparser"
 )
 
 type Calendar struct {
@@ -32,7 +31,7 @@ type Calendar struct {
 	//optional
 	CalScale        *StringVal
 	Method          *StringVal
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 	//since RFC 7986:
 	Uid        *StringVal
 	LastMod    *DateTimeVal
@@ -55,18 +54,17 @@ type TextVal struct {
 	Lang string
 }
 
-func ToTextVal(line *icalparser.ContentLine) (TextVal, error) {
+func ToTextVal(line *im.Property) (TextVal, error) {
 	var err error
 	out := TextVal{}
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paAltRep:
-			out.AltRep, err = url.Parse(strings.Trim(pval, "\""))
+			out.AltRep, err = url.Parse(strings.Trim(values[0], "\""))
 		case paLang:
-			out.Lang = pval
+			out.Lang = values[0]
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 	return out, err
@@ -75,37 +73,36 @@ func ToTextVal(line *icalparser.ContentLine) (TextVal, error) {
 
 type StringVal struct {
 	Value      string
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToStringVal(line *icalparser.ContentLine) StringVal {
-	return StringVal{line.Value.C, line.Param}
+func ToStringVal(line *im.Property) StringVal {
+	return StringVal{line.Value, line.Parameters}
 }
 
 type DateTimeVal struct {
 	Value      time.Time
 	Floating   bool
 	OnlyDate   bool
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToDateTimeVal(line *icalparser.ContentLine, isUtc bool) (DateTimeVal, error) {
-	tstr := strings.Trim(line.Value.C, "Z")
+func (cp *CalParser) ToDateTimeVal(line *im.Property, isUtc bool) (DateTimeVal, error) {
+	tstr := strings.Trim(line.Value, "Z")
 	var err error
 	out := DateTimeVal{}
 	out.OnlyDate = false
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paValue:
-			out.OnlyDate = strings.ToLower(pval) == tDate
+			out.OnlyDate = strings.ToLower(values[0]) == tDate
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 
-	out.Floating = !isUtc && !strings.HasSuffix(line.Value.C, "Z")
+	out.Floating = !isUtc && !strings.HasSuffix(line.Value, "Z")
 	if out.OnlyDate {
 		out.Value, err = time.Parse(util.ISO8601_2004_DATE, tstr)
 	} else {
@@ -116,31 +113,30 @@ func (cp *CalParser) ToDateTimeVal(line *icalparser.ContentLine, isUtc bool) (Da
 
 type URIVal struct {
 	URI        *url.URL
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToURIVal(line *icalparser.ContentLine) (URIVal, error) {
+func ToURIVal(line *im.Property) (URIVal, error) {
 	var err error
 	out := URIVal{}
-	out.OtherParam = line.Param
+	out.OtherParam = line.Parameters
 
-	out.URI, err = url.Parse(line.Value.C)
+	out.URI, err = url.Parse(line.Value)
 	return out, err
 
 }
 
 type DurVal struct {
 	Value      time.Duration
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToDurVal(line *icalparser.ContentLine) (DurVal, error) {
+func ToDurVal(line *im.Property) (DurVal, error) {
 	var err error
 	out := DurVal{}
-	out.OtherParam = line.Param
-	out.Value, err = util.ParseDuration(line.Value.C)
-	//idx := util.GetParam(line.Param, "VALUE")
-	//if err!=nil && idx<0 || line.Param[idx].ParamValues[0].C !="DURATION"{
+	out.OtherParam = line.Parameters
+	out.Value, err = util.ParseDuration(line.Value)
+	//if err!=nil && len(line.Parameters[paValue])==1 || line.Parameters[paValue][0] !="DURATION"{
 	//	//MAYBE VALUE=DURATION is theoretically required
 	//}
 	return out, err
@@ -156,42 +152,41 @@ type DataVal struct {
 }
 
 //TO?DO DisplayParam (new RFC)
-func ToDataVal(line *icalparser.ContentLine) (DataVal, error, error) {
+func ToDataVal(line *im.Property) (DataVal, error, error) {
 	var err, err2 error
 	out := DataVal{}
-	out.OtherParam = line.Param
+	out.OtherParam = line.Parameters
 	var valtype, enc string
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paAltRep:
-			out.AltRep, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.AltRep, err2 = url.Parse(strings.Trim(values[0], "\""))
 		case paValue:
-			valtype = pval
+			valtype = values[0]
 		case paFmtType:
-			out.MediaType = pval
+			out.MediaType = values[0]
 		case paDisp:
-			out.Display = pval
+			out.Display = values[0]
 		case paEnc:
-			enc = pval
+			enc = values[0]
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 	//assertions: ENCODING=BASE64
 	//			  VALUE is either BINARY or URL
 
 	if valtype == tBinary {
-		out.Data, err = base64.StdEncoding.DecodeString(line.Value.C)
+		out.Data, err = base64.StdEncoding.DecodeString(line.Value)
 		if err != nil && enc != "" && enc != "BASE64" {
-			err = errors.New("Unrecognized Encoding Format: " + line.String())
+			err = errors.New("Unrecognized Encoding Format: " + line.BeforeParsing())
 		}
 	} else if valtype == tURI {
-		out.URI, err = url.Parse(line.Value.C)
+		out.URI, err = url.Parse(line.Value)
 	} else if valtype == "" {
-		err = errors.New("No Value Type Defined: " + line.String())
+		err = errors.New("No Value Type Defined: " + line.BeforeParsing())
 	} else {
-		err = errors.New("Unrecognized Value Type: " + line.String())
+		err = errors.New("Unrecognized Value Type: " + line.BeforeParsing())
 	}
 	return out, err, err2
 
@@ -200,47 +195,47 @@ func ToDataVal(line *icalparser.ContentLine) (DataVal, error, error) {
 //MAYBE:eventually we will have to add minver and maxver, but for now this is enough.
 type Version StringVal
 
-func ToVersion(line *icalparser.ContentLine) Version {
-	return Version{line.Value.C, line.Param}
+func ToVersion(line *im.Property) Version {
+	return Version{line.Value, line.Parameters}
 }
 
 type ColorVal StringVal
 
-func ToColorVal(line *icalparser.ContentLine) ColorVal {
-	return ColorVal{line.Value.C, line.Param}
+func ToColorVal(line *im.Property) ColorVal {
+	return ColorVal{line.Value, line.Parameters}
 }
 
 type Categories struct {
 	Values     []string
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToCategVal(line *icalparser.ContentLine) Categories {
+func ToCategVal(line *im.Property) Categories {
 	return Categories{
-		strings.Split(line.Value.C, ","),
-		line.Param,
+		strings.Split(line.Value, ","),
+		line.Parameters,
 	}
 }
 
 type BoolVal struct {
 	Value      bool
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
 type FloatVal struct {
 	Value      float64
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
 type IntVal struct {
 	Value      int32
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToIntVal(line *icalparser.ContentLine) (out IntVal, err error) {
+func ToIntVal(line *im.Property) (out IntVal, err error) {
 	out = IntVal{}
-	out.OtherParam = line.Param
-	i, err := strconv.ParseInt(line.Value.C, 10, 32)
+	out.OtherParam = line.Parameters
+	i, err := strconv.ParseInt(line.Value, 10, 32)
 	out.Value = int32(i)
 	return
 }
@@ -252,31 +247,30 @@ type RecurrenceSetVal struct {
 	OnlyDate     bool
 	OnlyDateTime bool
 
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToRecurrenceSetVal(line *icalparser.ContentLine) (out RecurrenceSetVal, err error) {
-	//todo 	tstr := strings.Trim(line.Value.C, "Z")
+func (cp *CalParser) ToRecurrenceSetVal(line *im.Property) (out RecurrenceSetVal, err error) {
+	//todo 	tstr := strings.Trim(line.Value, "Z")
 	out = RecurrenceSetVal{
 		From:         nil,
 		For:          nil,
-		Floating:     !strings.Contains(line.Value.C, "Z"),
+		Floating:     !strings.Contains(line.Value, "Z"),
 		OnlyDate:     false,
 		OnlyDateTime: false,
 		OtherParam:   nil,
 	}
 	vtype := tDateTime
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paValue:
-			vtype = strings.ToLower(pval)
+			vtype = strings.ToLower(values[0])
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
-	values := strings.Split(line.Value.C, ",")
+	values := strings.Split(line.Value, ",")
 	for _, val := range values {
 		switch vtype {
 		case tDate:
@@ -303,7 +297,7 @@ func (cp *CalParser) ToRecurrenceSetVal(line *icalparser.ContentLine) (out Recur
 			out.From = append(out.From, x1)
 			out.For = append(out.For, x2)
 		default:
-			err = errors.New("Not a valid Type: " + vtype + " in: " + line.String())
+			err = errors.New("Not a valid Type: " + vtype + " in: " + line.BeforeParsing())
 			return
 		}
 	}
@@ -314,21 +308,21 @@ type TimeVal DateTimeVal
 
 type GeoVal struct {
 	Lat, Long  float64
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToGeoVal(line *icalparser.ContentLine) (out GeoVal, err error) {
+func ToGeoVal(line *im.Property) (out GeoVal, err error) {
 	out = GeoVal{}
-	out.OtherParam = line.Param
-	latlongs := strings.SplitN(line.Value.C, ";", 2)
+	out.OtherParam = line.Parameters
+	latlongs := strings.SplitN(line.Value, ";", 2)
 	out.Lat, err = strconv.ParseFloat(latlongs[0], 64)
 	out.Long, err = strconv.ParseFloat(latlongs[1], 64)
 	if err == nil {
 		if out.Lat > 90 || out.Lat < -90 {
-			err = errors.New("latitude out of bounds [-90;90]:" + line.String())
+			err = errors.New("latitude out of bounds [-90;90]:" + line.BeforeParsing())
 		}
 		if out.Long > 180 || out.Long < -180 {
-			err = errors.New("longitude out of bounds [-180;180]:" + line.String())
+			err = errors.New("longitude out of bounds [-180;180]:" + line.BeforeParsing())
 		}
 	}
 	return
@@ -351,55 +345,54 @@ type PersonVal struct {
 	//from RFC7986 (section 6.2), when Address can not be used as an Email-Adress.
 	EMail string
 
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToPersonVal(line *icalparser.ContentLine) (out PersonVal, err, err2 error) {
+func ToPersonVal(line *im.Property) (out PersonVal, err, err2 error) {
 	out = PersonVal{}
-	out.Address, err = url.Parse(line.Value.C)
+	out.Address, err = url.Parse(line.Value)
 	if err != nil {
 		return
 	}
 	//parse parameters
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paCN:
-			out.CN = pval
+			out.CN = values[0]
 		case paDir:
-			out.Dir, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.Dir, err2 = url.Parse(strings.Trim(values[0], "\""))
 		case paSentBy:
-			out.SentBy, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.SentBy, err2 = url.Parse(strings.Trim(values[0], "\""))
 		case paLang:
-			out.Lang = pval
+			out.Lang = values[0]
 
 		// attendees
 		case paCUType:
-			out.CUType = pval
+			out.CUType = values[0]
 		case paMbr:
-			out.Member, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.Member, err2 = url.Parse(strings.Trim(values[0], "\""))
 		case paRole:
-			out.Role = pval
+			out.Role = values[0]
 		case paPartStat:
-			out.PartStat = pval
+			out.PartStat = values[0]
 		case paRSVP:
-			if strings.ToLower(pval) == "true" {
+			if strings.ToLower(values[0]) == "true" {
 				out.RSvp = true
-			} else if strings.ToLower(pval) == "false" {
+			} else if strings.ToLower(values[0]) == "false" {
 				out.RSvp = false
 			} else {
-				err2 = errors.New("RSVP has to be either TRUE or FALSE :" + line.String())
+				err2 = errors.New("RSVP has to be either TRUE or FALSE :" + line.BeforeParsing())
 			}
 		case paDelTo:
-			out.DelegTo, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.DelegTo, err2 = url.Parse(strings.Trim(values[0], "\""))
 		case paDelFrom:
-			out.DelegFrom, err2 = url.Parse(strings.Trim(pval, "\""))
+			out.DelegFrom, err2 = url.Parse(strings.Trim(values[0], "\""))
 
 		case paEMail:
-			out.EMail = pval
+			out.EMail = values[0]
 
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 	return
@@ -407,15 +400,15 @@ func ToPersonVal(line *icalparser.ContentLine) (out PersonVal, err, err2 error) 
 
 type ReqStatusVal struct {
 	Code, Text, Data string
-	OtherParam       []*icalparser.Param
+	OtherParam       im.Parameters
 }
 
-func ToReqStatusVal(line *icalparser.ContentLine) (out ReqStatusVal, err error) {
+func ToReqStatusVal(line *im.Property) (out ReqStatusVal, err error) {
 	out = ReqStatusVal{}
-	out.OtherParam = line.Param
-	all := strings.SplitN(line.Value.C, ";", 3)
+	out.OtherParam = line.Parameters
+	all := strings.SplitN(line.Value, ";", 3)
 	if len(all) < 2 {
-		err = errors.New("REQUEST-STATUS has to have at least two ';'-separated values: " + line.String())
+		err = errors.New("REQUEST-STATUS has to have at least two ';'-separated values: " + line.BeforeParsing())
 	} else {
 		out.Code = all[0]
 		out.Text = all[1]
@@ -433,35 +426,32 @@ type ConferenceVal struct {
 	Lang     string
 }
 
-func ToConferenceVal(line *icalparser.ContentLine) (out ConferenceVal, err, err2 error) {
+func ToConferenceVal(line *im.Property) (out ConferenceVal, err, err2 error) {
 	out = ConferenceVal{}
-	out.URI, err = url.Parse(line.Value.C)
+	out.URI, err = url.Parse(line.Value)
 	if err != nil {
 		return
 	}
 	valtype := ""
 	//parse parameters
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paValue:
-			valtype = strings.ToLower(pval)
+			valtype = strings.ToLower(values[0])
 		case paFeature:
 			//out.Features = strings.Split(strings.ToLower(pval), ",")
-			for _, v := range param.ParamValues {
-				out.Features = append(out.Features, v.C)
-			}
+			out.Features = values
 		case paLabel:
-			out.Label = strings.Trim(pval, "\"")
+			out.Label = strings.Trim(values[0], "\"")
 		case paLang:
-			out.Lang = pval
+			out.Lang = values[0]
 
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 	if valtype != "URI" {
-		err2 = errors.New("VALUE must be defined as URI: " + line.String())
+		err2 = errors.New("VALUE must be defined as URI: " + line.BeforeParsing())
 	}
 	return
 }
@@ -471,10 +461,10 @@ type TriggerVal struct {
 	Delay      *time.Duration
 	Time       *time.Time
 	RelToEnd   bool
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
-func ToTriggerVal(line *icalparser.ContentLine) (out TriggerVal, err, err2 error) {
+func ToTriggerVal(line *im.Property) (out TriggerVal, err, err2 error) {
 	out = TriggerVal{
 		IsRelative: false,
 		Delay:      nil,
@@ -484,33 +474,32 @@ func ToTriggerVal(line *icalparser.ContentLine) (out TriggerVal, err, err2 error
 	}
 	valtype := tDur
 	//parse parameters
-	for _, param := range line.Param {
-		pval := param.ParamValues[0].C
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paValue:
-			valtype = strings.ToLower(pval)
+			valtype = strings.ToLower(values[0])
 		case paTrRel:
-			val := strings.ToLower(pval)
+			val := strings.ToLower(values[0])
 			if val == "end" {
 				out.RelToEnd = true
 			} else if val != "start" {
-				err2 = errors.New("RELATED - property must be START or END but was " + val + ": " + line.String())
+				err2 = errors.New("RELATED - property must be START or END but was " + val + ": " + line.BeforeParsing())
 			}
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
 	if valtype == tDur {
 		out.IsRelative = true
-		x, err1 := util.ParseDuration(line.Value.C)
+		x, err1 := util.ParseDuration(line.Value)
 		out.Delay = &x
 		err = err1
 	} else if valtype == tDateTime {
-		x, err1 := time.Parse(util.ISO8601_2004, strings.Trim(line.Value.C, "Z"))
+		x, err1 := time.Parse(util.ISO8601_2004, strings.Trim(line.Value, "Z"))
 		out.Time = &x
 		err = err1
 	} else {
-		err = errors.New("Unexpected Value type '" + valtype + "': " + line.String())
+		err = errors.New("Unexpected Value type '" + valtype + "': " + line.BeforeParsing())
 	}
 	return
 }
@@ -520,22 +509,22 @@ type FBVal struct {
 	For    []time.Duration
 	FBType string
 
-	OtherParam []*icalparser.Param
+	OtherParam im.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToFBVal(line *icalparser.ContentLine) (out FBVal, err error) {
-	//todo 	tstr := strings.Trim(line.Value.C, "Z")
+func (cp *CalParser) ToFBVal(line *im.Property) (out FBVal, err error) {
+	//todo 	tstr := strings.Trim(line.Value, "Z")
 	out = FBVal{}
-	for _, param := range line.Param {
-		switch strings.ToLower(param.ParamName.C) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paFBType:
-			out.FBType = param.ParamValues[0].C
+			out.FBType = values[0]
 		default:
-			out.OtherParam = append(out.OtherParam, param)
+			out.OtherParam[name] = values
 		}
 	}
-	for _, val := range strings.Split(line.Value.C, ",") {
+	for _, val := range strings.Split(line.Value, ",") {
 		x1, x2, er := util.ParsePeriod(val)
 		if er != nil {
 			return out, er
@@ -555,15 +544,15 @@ type RelationVal struct {
 	RelType string
 }
 
-func ToRelationVal(line *icalparser.ContentLine) (out RelationVal) {
-	for _, par := range line.Param {
-		switch strings.ToLower(par.ParamName.C) {
+func ToRelationVal(line *im.Property) (out RelationVal) {
+	for name, values := range line.Parameters {
+		switch name {
 		case paRelType:
-			out.RelType = par.ParamValues[0].C
+			out.RelType = values[0]
 		default:
-			out.OtherParam = append(out.OtherParam, par)
+			out.OtherParam[name] = values
 		}
 	}
-	out.Value = line.Value.C
+	out.Value = line.Value
 	return
 }

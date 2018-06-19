@@ -1,10 +1,7 @@
 package go_ical
 
 import (
-	"strings"
-
 	"github.com/mqus/go-ical/im"
-	"github.com/soh335/icalparser"
 )
 
 type FreeBusy struct {
@@ -26,14 +23,14 @@ type FreeBusy struct {
 	FreeBusy   []*FBVal
 	RStatus    []*ReqStatusVal
 
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 	OtherComponents []*im.Component
 }
 
 func (cp *CalParser) parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 	out = &FreeBusy{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prDTStamp:
 			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {

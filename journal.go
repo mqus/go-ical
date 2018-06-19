@@ -1,10 +1,7 @@
 package go_ical
 
 import (
-	"strings"
-
 	"github.com/mqus/go-ical/im"
-	"github.com/soh335/icalparser"
 )
 
 type Journal struct {
@@ -42,7 +39,7 @@ type Journal struct {
 	RDate   []*RecurrenceSetVal
 	RStatus []*ReqStatusVal
 
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 	OtherComponents []*im.Component
 
 	//since RFC 7986:
@@ -53,7 +50,7 @@ type Journal struct {
 func (cp *CalParser) parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 	out = &Journal{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prDTStamp:
 			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {

@@ -44,7 +44,7 @@ func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
 	out = &Calendar{Version: Version{"2.0", nil}}
 	cp.currentCalendar = out
 	for _, prop := range calcomp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prProdID:
 			out.ProdID = ToStringVal(prop)
 
@@ -64,7 +64,7 @@ func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
 			out.Uid = &x
 
 		case prLastMod:
-			x, err := ToDateTimeVal(prop, true)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding LastMod

@@ -5,7 +5,6 @@ import (
 
 	"github.com/mqus/go-ical/im"
 	"github.com/mqus/go-ical/util"
-	"github.com/soh335/icalparser"
 )
 
 type TimeZone struct {
@@ -18,7 +17,7 @@ type TimeZone struct {
 	LastMod *DateTimeVal
 	URL     *URIVal
 
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 }
 
 type StandardDaylightTime struct {
@@ -38,7 +37,7 @@ type StandardDaylightTime struct {
 	// for displaying TimeZone (e.g. EST)
 	TZName []*TextVal
 
-	OtherProperties []*icalparser.ContentLine
+	OtherProperties []*im.Property
 }
 
 type TZidVal struct {
@@ -46,27 +45,23 @@ type TZidVal struct {
 	IsGloballyUnique bool
 }
 
-func ToTZidVal(line *icalparser.ContentLine) (out TZidVal) {
-	return TZidVal{ToStringVal(line), strings.HasPrefix(line.Value.C, "/")}
+func ToTZidVal(line *im.Property) (out TZidVal) {
+	return TZidVal{ToStringVal(line), strings.HasPrefix(line.Value, "/")}
 }
 
 type UTCOffsetVal DurVal
 
-func ToUTCOffsetVal(line *icalparser.ContentLine) (out UTCOffsetVal, err error) {
+func ToUTCOffsetVal(line *im.Property) (out UTCOffsetVal, err error) {
 	out = UTCOffsetVal{}
-	out.OtherParam = line.Param
-	out.Value, err = util.ParseUTCOffset(line.Value.C)
-	//idx := util.GetParam(line.Param, "VALUE")
-	//if err!=nil && idx<0 || line.Param[idx].ParamValues[0].C !="DURATION"{
-	//	//MAYBE VALUE=DURATION is theoretically required
-	//}
+	out.OtherParam = line.Parameters
+	out.Value, err = util.ParseUTCOffset(line.Value)
 	return out, err
 }
 
 func (cp *CalParser) parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
 	out = &TimeZone{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prTZid:
 			out.ID = ToTZidVal(prop)
 
@@ -124,7 +119,7 @@ func (cp *CalParser) parseVTIMEZONE(comp *im.Component) (out *TimeZone, err erro
 func (cp *CalParser) parseSDTime(comp *im.Component, isDaylight bool) (out *StandardDaylightTime, err error, err2 error) {
 	out = &StandardDaylightTime{}
 	for _, prop := range comp.Properties {
-		switch strings.ToLower(prop.Name.C) {
+		switch prop.Name {
 		case prDTStart:
 			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
