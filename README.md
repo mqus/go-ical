@@ -12,6 +12,7 @@ This is a work in Progress:
   - [x] VTODO
   - [x] VFREEBUSY
   - [ ] VTIMEZONE
+    - [x] implement VTIMEZONE
     - [ ] implement timezoning in other components
 - [ ] replace structural parser
 - [ ] Implement tests
@@ -20,3 +21,5 @@ This is a work in Progress:
 - [ ] Conformance checking
   - [ ] strictness settings
 
+### MAYBE:
+- [ ] implement Venue Draft (https://tools.ietf.org/id/draft-norris-ical-venue-00.txt)

@@ -8,7 +8,7 @@ import (
 
 	"encoding/base64"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"strconv"
 
@@ -19,12 +19,11 @@ import (
 
 type Calendar struct {
 	//Components
-	Events   []*Event
-	ToDos    []*ToDo
-	Journals []*Journal
-	FreeBusy []*FreeBusy
-	//TODO
-	//	TimeZones       []*TimeZone
+	Events          []*Event
+	ToDos           []*ToDo
+	Journals        []*Journal
+	FreeBusy        []*FreeBusy
+	TimeZones       map[string]*TimeZone
 	OtherComponents []*im.Component
 	//Properties
 	//required
@@ -154,6 +153,7 @@ type DataVal struct {
 	URI        *url.URL
 	AltRep     *url.URL
 	MediaType  string
+	Display    string
 	OtherParam []*icalparser.Param
 }
 
@@ -172,6 +172,8 @@ func ToDataVal(line *icalparser.ContentLine) (DataVal, error, error) {
 			valtype = pval
 		case paFmtType:
 			out.MediaType = pval
+		case paDisp:
+			out.Display = pval
 		case paEnc:
 			enc = pval
 		default:
@@ -551,4 +553,20 @@ func ToFBVal(line *icalparser.ContentLine) (out FBVal, err error) {
 type StatusVal StringVal
 type TTranspVal StringVal
 type RecurIDVal DateTimeVal
-type RelationVal StringVal
+
+type RelationVal struct {
+	StringVal
+	RelType string
+}
+
+func ToRelationVal(line *icalparser.ContentLine) (out RelationVal) {
+	for _, par := range line.Param {
+		switch strings.ToLower(par.ParamName.C) {
+		case paRelType:
+			out.RelType = par.ParamValues[0].C
+		default:
+			out.OtherParam = append(out.OtherParam, par)
+		}
+	}
+	out.Value = line.Value.C
+}

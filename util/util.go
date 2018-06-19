@@ -3,7 +3,7 @@ package util
 import (
 	"time"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"strconv"
 	"strings"
@@ -117,4 +117,33 @@ func ParsePeriod(s string) (from time.Time, dur time.Duration, err error) {
 	}
 
 	return
+}
+
+func ParseUTCOffset(s string) (out time.Duration, err error) {
+	in := s + "00"
+	if len(s) < 5 {
+		return 0, errors.New("UTC-Offset must have at least 5 symbols: " + s)
+	}
+	negpos := time.Duration(1)
+	var tmpdur int
+	if in[0:1] == "-" {
+		negpos = time.Duration(-1)
+	} else if in[0:1] == "+" {
+		return 0, errors.New("Expected '-' or '+' at start of UTC-Offset-Value: " + s)
+	}
+
+	//parse hours
+	tmpdur, err = strconv.Atoi(in[1:3])
+	out = out + time.Duration(tmpdur)*time.Hour
+	//parse minutes
+	tmpdur, err = strconv.Atoi(in[3:5])
+	out = out + time.Duration(tmpdur)*time.Minute
+	//parse seconds
+	tmpdur, err = strconv.Atoi(in[5:7])
+	out = out + time.Duration(tmpdur)*time.Second
+
+	//include previously parsed sign
+	out = negpos * out
+	return
+
 }

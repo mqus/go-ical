@@ -24,7 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 
-required = ["github.com/soh335/icalparser"]
+required = ["github.com/soh335/icalparser", "github.com/pkg/errors"]
 
 [prune]
   go-tests = true

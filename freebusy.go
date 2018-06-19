@@ -142,7 +142,9 @@ func parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 		}
 
 	}
-	out.OtherComponents = comp.Comps
+	//MAYBE don't silently discard other Components
+	// out.OtherComponents = comp.Comps
+
 	//TODO Conformance Checking
 	return
 }

@@ -308,8 +308,9 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			} else {
 				out.RStatus = append(out.RStatus, &x)
 			}
+
 		case prRelTo:
-			x := RelationVal(ToStringVal(prop))
+			x := ToRelationVal(prop)
 			out.Related = append(out.Related, &x)
 
 		case prRes:
@@ -380,7 +381,8 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 				out.Alarms = append(out.Alarms, al)
 			}
 		default:
-			out.OtherComponents = append(out.OtherComponents, subcomp)
+			//MAYBE don't silently discard other Components
+			// out.OtherComponents = append(out.OtherComponents, subcomp)
 		}
 	}
 	//TODO Conformance Checking

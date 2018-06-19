@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/soh335/icalparser"
   packages = ["."]
@@ -10,6 +16,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "006e2b080ba74a98623b025f5d95db6e1490c208c90c8cfc03a982e0fdc4ce72"
+  inputs-digest = "e162f30e282cb89e7131c66bec2b6b4723c4ae8157713327bdb54f93c942c2f9"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -183,7 +183,18 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vTZ:
-			fallthrough //TODO TimeZone
+			x, err, err2 := parseVTIMEZONE(comp)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding FREEBUSY
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding subcomponents/properties
+				}
+				out.TimeZones[x.ID.Value] = x
+			}
+
 		default:
 			out.OtherComponents = append(out.OtherComponents, comp)
 		}

@@ -2,13 +2,15 @@ package go_ical
 
 const (
 	//Components:
-	vCal  = "vcalendar"
-	vEv   = "vevent"
-	vTODO = "vtodo"
-	vJnl  = "vjournal"
-	vFB   = "vfreebusy"
-	vTZ   = "vtimezone"
-	vAl   = "valarm"
+	vCal      = "vcalendar"
+	vEv       = "vevent"
+	vTODO     = "vtodo"
+	vJnl      = "vjournal"
+	vFB       = "vfreebusy"
+	vTZ       = "vtimezone"
+	vAl       = "valarm"
+	vDaylight = "daylight"
+	vStandard = "standard"
 
 	//Properties
 	// calendar

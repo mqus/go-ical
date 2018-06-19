@@ -1,7 +1,7 @@
 package im
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/soh335/icalparser"
 )

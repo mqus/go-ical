@@ -210,7 +210,7 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			}
 
 		case prRelTo:
-			x := RelationVal(ToStringVal(prop))
+			x := ToRelationVal(prop)
 			out.Related = append(out.Related, &x)
 
 		case prRDate:
@@ -253,7 +253,8 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 		}
 
 	}
-	out.OtherComponents = comp.Comps
+	//MAYBE don't silently discard other Components
+	// out.OtherComponents = comp.Comps
 	//TODO Conformance Checking
 	return
 }
