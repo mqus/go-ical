@@ -48,12 +48,11 @@ type Calendar struct {
 
 //Property Value Types
 type TextVal struct {
-	Value  string
+	StringVal
 	AltRep *url.URL
 
 	//must conform with RFC5646
-	Lang       string
-	OtherParam []*icalparser.Param
+	Lang string
 }
 
 func ToTextVal(line *icalparser.ContentLine) (TextVal, error) {
@@ -91,7 +90,7 @@ type DateTimeVal struct {
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func ToDateTimeVal(line *icalparser.ContentLine, isUtc bool) (DateTimeVal, error) {
+func (cp *CalParser) ToDateTimeVal(line *icalparser.ContentLine, isUtc bool) (DateTimeVal, error) {
 	tstr := strings.Trim(line.Value.C, "Z")
 	var err error
 	out := DateTimeVal{}
@@ -149,15 +148,14 @@ func ToDurVal(line *icalparser.ContentLine) (DurVal, error) {
 
 type DataVal struct {
 	//binary data must always be encoded with base64!
-	Data       []byte
-	URI        *url.URL
-	AltRep     *url.URL
-	MediaType  string
-	Display    string
-	OtherParam []*icalparser.Param
+	Data []byte
+	URIVal
+	AltRep    *url.URL
+	MediaType string
+	Display   string
 }
 
-//TODO DisplayParam (new RFC)
+//TO?DO DisplayParam (new RFC)
 func ToDataVal(line *icalparser.ContentLine) (DataVal, error, error) {
 	var err, err2 error
 	out := DataVal{}
@@ -258,7 +256,7 @@ type RecurrenceSetVal struct {
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func ToRecurrenceSetVal(line *icalparser.ContentLine) (out RecurrenceSetVal, err error) {
+func (cp *CalParser) ToRecurrenceSetVal(line *icalparser.ContentLine) (out RecurrenceSetVal, err error) {
 	//todo 	tstr := strings.Trim(line.Value.C, "Z")
 	out = RecurrenceSetVal{
 		From:         nil,
@@ -429,12 +427,10 @@ func ToReqStatusVal(line *icalparser.ContentLine) (out ReqStatusVal, err error) 
 }
 
 type ConferenceVal struct {
-	URI      *url.URL
+	URIVal
 	Features []string
 	Label    string
 	Lang     string
-
-	OtherParam []*icalparser.Param
 }
 
 func ToConferenceVal(line *icalparser.ContentLine) (out ConferenceVal, err, err2 error) {
@@ -482,7 +478,7 @@ func ToTriggerVal(line *icalparser.ContentLine) (out TriggerVal, err, err2 error
 	out = TriggerVal{
 		IsRelative: false,
 		Delay:      nil,
-		Time:       nil,
+		Time:       nil, //IS ALWAYS UTC
 		RelToEnd:   false,
 		OtherParam: nil,
 	}
@@ -528,7 +524,7 @@ type FBVal struct {
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func ToFBVal(line *icalparser.ContentLine) (out FBVal, err error) {
+func (cp *CalParser) ToFBVal(line *icalparser.ContentLine) (out FBVal, err error) {
 	//todo 	tstr := strings.Trim(line.Value.C, "Z")
 	out = FBVal{}
 	for _, param := range line.Param {
@@ -569,4 +565,5 @@ func ToRelationVal(line *icalparser.ContentLine) (out RelationVal) {
 		}
 	}
 	out.Value = line.Value.C
+	return
 }

@@ -63,7 +63,7 @@ func ToUTCOffsetVal(line *icalparser.ContentLine) (out UTCOffsetVal, err error) 
 	return out, err
 }
 
-func parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
+func (cp *CalParser) parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
 	out = &TimeZone{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
@@ -71,7 +71,7 @@ func parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
 			out.ID = ToTZidVal(prop)
 
 		case prLastMod:
-			x, err := ToDateTimeVal(prop, true)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding LastMod
@@ -101,7 +101,7 @@ func parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
 			isDaylight = true
 			fallthrough
 		case vStandard:
-			os, e1, e2 := parseSDTime(subcomp, isDaylight)
+			os, e1, e2 := cp.parseSDTime(subcomp, isDaylight)
 			if e1 != nil {
 				//MAYBE return err
 				// instead of silently discarding DAYLIGHT/STANDARD component
@@ -121,12 +121,12 @@ func parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
 	return
 }
 
-func parseSDTime(comp *im.Component, isDaylight bool) (out *StandardDaylightTime, err error, err2 error) {
+func (cp *CalParser) parseSDTime(comp *im.Component, isDaylight bool) (out *StandardDaylightTime, err error, err2 error) {
 	out = &StandardDaylightTime{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prDTStart:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStart
@@ -165,7 +165,7 @@ func parseSDTime(comp *im.Component, isDaylight bool) (out *StandardDaylightTime
 			out.Comment = append(out.Comment, &x)
 
 		case prRDate:
-			x, err := ToRecurrenceSetVal(prop)
+			x, err := cp.ToRecurrenceSetVal(prop)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate

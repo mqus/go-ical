@@ -50,12 +50,12 @@ type Journal struct {
 	Images []*DataVal
 }
 
-func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
+func (cp *CalParser) parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 	out = &Journal{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prDTStamp:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStamp
@@ -71,7 +71,7 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			out.Class = &x
 
 		case prCreated:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//Error while parsing
 				//MAYBE return err
@@ -81,7 +81,7 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			}
 
 		case prLastMod:
-			x, err := ToDateTimeVal(prop, true)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding LastMod
@@ -103,7 +103,8 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			}
 
 		case prRid:
-			x, err := ToDateTimeVal(prop, false)
+			//RANGE param? TODO
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding RecurrenceID
@@ -201,7 +202,7 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			out.Desc = append(out.Desc, &x)
 
 		case prExcDate:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate
@@ -214,7 +215,7 @@ func parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
 			out.Related = append(out.Related, &x)
 
 		case prRDate:
-			x, err := ToRecurrenceSetVal(prop)
+			x, err := cp.ToRecurrenceSetVal(prop)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate

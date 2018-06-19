@@ -10,18 +10,28 @@ import (
 )
 
 type CalParser struct {
-	inner *icalparser.Parser
+	inner           *icalparser.Parser
+	currentCalendar *Calendar
+	ComponentErrors chan<- error
+	PropertyErrors  chan<- error
+	ParameterErrors chan<- error
 }
 
 type ICalOutputter interface {
 	OutputICal() string
 }
 
-func NewParser(reader io.Reader) CalParser {
-	return CalParser{icalparser.NewParser(reader)}
+func NewParser(reader io.Reader, componentErrors, propertyErrors, parameterErrors chan<- error) CalParser {
+	return CalParser{
+		inner:           icalparser.NewParser(reader),
+		currentCalendar: nil,
+		ComponentErrors: componentErrors,
+		PropertyErrors:  propertyErrors,
+		ParameterErrors: parameterErrors,
+	}
 }
 
-func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
+func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
 	cobj, err := cp.inner.Parse()
 	if err != nil {
 		return nil, err
@@ -32,6 +42,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 	}
 
 	out = &Calendar{Version: Version{"2.0", nil}}
+	cp.currentCalendar = out
 	for _, prop := range calcomp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prProdID:
@@ -128,10 +139,28 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 
 	}
 
+	//first parse all TimeZone components, to enable assigning accurate times for all components.
 	for _, comp := range calcomp.Comps {
-		switch comp.Name {
+		if strings.ToLower(comp.Name) == vTZ {
+			x, err, err2 := cp.parseVTIMEZONE(comp)
+			if err != nil {
+				//MAYBE return err
+				// instead of silently discarding TIMEZONE component
+			} else {
+				if err2 != nil {
+					//MAYBE return err
+					// instead of silently discarding subcomponents/properties
+				}
+				out.TimeZones[x.ID.Value] = x
+			}
+		}
+	}
+
+	//then all other components
+	for _, comp := range calcomp.Comps {
+		switch strings.ToLower(comp.Name) {
 		case vEv:
-			x, err, err2 := parseVEVENT(comp)
+			x, err, err2 := cp.parseVEVENT(comp)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding EVENT
@@ -144,7 +173,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vTODO:
-			x, err, err2 := parseVTODO(comp)
+			x, err, err2 := cp.parseVTODO(comp)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding EVENT
@@ -157,7 +186,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vJnl:
-			x, err, err2 := parseVJOURNAL(comp)
+			x, err, err2 := cp.parseVJOURNAL(comp)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding JOURNAL
@@ -170,7 +199,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vFB:
-			x, err, err2 := parseVFREEBUSY(comp)
+			x, err, err2 := cp.parseVFREEBUSY(comp)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding FREEBUSY
@@ -183,18 +212,7 @@ func (cp *CalParser) Parse(reader io.Reader) (out *Calendar, err error) {
 			}
 
 		case vTZ:
-			x, err, err2 := parseVTIMEZONE(comp)
-			if err != nil {
-				//MAYBE return err
-				// instead of silently discarding FREEBUSY
-			} else {
-				if err2 != nil {
-					//MAYBE return err
-					// instead of silently discarding subcomponents/properties
-				}
-				out.TimeZones[x.ID.Value] = x
-			}
-
+			//already parsed
 		default:
 			out.OtherComponents = append(out.OtherComponents, comp)
 		}

@@ -68,12 +68,12 @@ type ToDo struct {
 	Conference []*ConferenceVal
 }
 
-func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
+func (cp *CalParser) parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 	out = &ToDo{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prDTStamp:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStamp
@@ -89,17 +89,17 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			out.Class = &x
 
 		case prCompl:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//Error while parsing
 				//MAYBE return err
-				// instead of silently discarding Created
+				// instead of silently discarding Completed
 			} else {
 				out.Completed = &x
 			}
 
 		case prCreated:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//Error while parsing
 				//MAYBE return err
@@ -118,7 +118,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			//out.Desc = append(out.Desc, x)
 
 		case prDTStart:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStart
@@ -136,7 +136,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			}
 
 		case prLastMod:
-			x, err := ToDateTimeVal(prop, true)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding LastMod
@@ -184,7 +184,8 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			}
 
 		case prRid:
-			x, err := ToDateTimeVal(prop, false)
+			//TODO RANGE param
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding RecurrenceID
@@ -228,7 +229,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			out.RRule = &x
 
 		case prDue:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTDue
@@ -292,7 +293,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			out.Contact = append(out.Contact, &x)
 
 		case prExcDate:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate
@@ -322,7 +323,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 			out.Resources = append(out.Resources, &x)
 
 		case prRDate:
-			x, err := ToRecurrenceSetVal(prop)
+			x, err := cp.ToRecurrenceSetVal(prop)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate
@@ -369,7 +370,7 @@ func parseVTODO(comp *im.Component) (out *ToDo, err error, err2 error) {
 	for _, subcomp := range comp.Comps {
 		switch strings.ToLower(subcomp.Name) {
 		case vAl:
-			al, e1, e2 := parseVALARM(subcomp)
+			al, e1, e2 := cp.parseVALARM(subcomp)
 			if e1 != nil {
 				//MAYBE return err
 				// instead of silently discarding Alarm component

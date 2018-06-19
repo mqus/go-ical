@@ -29,7 +29,7 @@ type Alarm struct {
 	OtherComponents []*im.Component
 }
 
-func parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
+func (cp *CalParser) parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
 	out = &Alarm{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {

@@ -66,12 +66,12 @@ type Event struct {
 	Conference []*ConferenceVal
 }
 
-func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
+func (cp *CalParser) parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 	out = &Event{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prDTStamp:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStamp
@@ -83,7 +83,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			out.Uid = ToStringVal(prop)
 
 		case prDTStart:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStart
@@ -96,7 +96,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			out.Class = &x
 
 		case prCreated:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//Error while parsing
 				//MAYBE return err
@@ -124,7 +124,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prLastMod:
-			x, err := ToDateTimeVal(prop, true)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding LastMod
@@ -197,7 +197,8 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			}
 
 		case prRid:
-			x, err := ToDateTimeVal(prop, false)
+			//TODO RANGE param
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding RecurrenceID
@@ -211,7 +212,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			out.RRule = &x
 
 		case prDTEnd:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTEnd
@@ -275,7 +276,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			out.Contact = append(out.Contact, &x)
 
 		case prExcDate:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate
@@ -304,7 +305,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 			out.Resources = append(out.Resources, &x)
 
 		case prRDate:
-			x, err := ToRecurrenceSetVal(prop)
+			x, err := cp.ToRecurrenceSetVal(prop)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding ExceptionDate
@@ -351,7 +352,7 @@ func parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
 	for _, subcomp := range comp.Comps {
 		switch strings.ToLower(subcomp.Name) {
 		case vAl:
-			al, e1, e2 := parseVALARM(subcomp)
+			al, e1, e2 := cp.parseVALARM(subcomp)
 			if e1 != nil {
 				//MAYBE return err
 				// instead of silently discarding Alarm component

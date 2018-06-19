@@ -30,12 +30,12 @@ type FreeBusy struct {
 	OtherComponents []*im.Component
 }
 
-func parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
+func (cp *CalParser) parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 	out = &FreeBusy{}
 	for _, prop := range comp.Properties {
 		switch strings.ToLower(prop.Name.C) {
 		case prDTStamp:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, true)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStamp
@@ -55,7 +55,7 @@ func parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 			out.Contact = &x
 
 		case prDTStart:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTStart
@@ -64,7 +64,7 @@ func parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 			}
 
 		case prDTEnd:
-			x, err := ToDateTimeVal(prop, false)
+			x, err := cp.ToDateTimeVal(prop, false)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding DTEnd
@@ -120,7 +120,7 @@ func parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
 			out.Comment = append(out.Comment, &x)
 
 		case prFB:
-			x, err := ToFBVal(prop)
+			x, err := cp.ToFBVal(prop)
 			if err != nil {
 				//MAYBE return err
 				// instead of silently discarding FreeBusy
