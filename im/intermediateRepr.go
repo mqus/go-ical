@@ -9,9 +9,10 @@ import (
 )
 
 type Component struct {
-	Name       string
-	Comps      []*Component
-	Properties []*Property
+	Name                 string
+	Comps                []*Component
+	Properties           []*Property
+	oldHeader, oldFooter string
 }
 
 func ToIntermediate(obj *icalparser.Object) (out *Component, err error) {
