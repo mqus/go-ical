@@ -16,11 +16,13 @@ This is a work in Progress:
   - [ ] VTIMEZONE
     - [x] implement VTIMEZONE
     - [ ] implement timezoning in other components
-- [ ] replace structural parser
+- [x] replace structural parser
+  - [ ] switch to toUpper for Para/Comp/Prop-Names and also change constants
   - see RFC6868 (additional Characters and encoding)
-  - see Section
+  - see Section 3.1
 - [ ] Implement tests
 - [ ] Recurrence matching helper functions
+  - [ ] Implement RecurrentRules
 - [ ] struct -> ical stream encoder
 - [ ] Conformance checking
   - [ ] strictness settings
@@ -38,6 +40,6 @@ This is a work in Progress:
 - 7986: New Attributes for ICal (Image/Conference/Color)
 - 6868: Additional Characters and encoding
 - 7953: VAVAILABILITY
-  - will not be implemented for now (open an Issue with your use case)
+  - will not be implemented for now (open an Issue with your use case!)
 - 7529: iCalendar RScale extension
- - will not be implemented for now (open an Issue with your use case)
+ - will not be implemented for now (open an Issue with your use case!)

@@ -3,7 +3,8 @@ package go_ical
 import (
 	"strings"
 
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
+
 	"github.com/mqus/go-ical/util"
 )
 
@@ -17,7 +18,7 @@ type TimeZone struct {
 	LastMod *DateTimeVal
 	URL     *URIVal
 
-	OtherProperties []*im.Property
+	OtherProperties []*cl.Property
 }
 
 type StandardDaylightTime struct {
@@ -37,7 +38,7 @@ type StandardDaylightTime struct {
 	// for displaying TimeZone (e.g. EST)
 	TZName []*TextVal
 
-	OtherProperties []*im.Property
+	OtherProperties []*cl.Property
 }
 
 type TZidVal struct {
@@ -45,20 +46,20 @@ type TZidVal struct {
 	IsGloballyUnique bool
 }
 
-func ToTZidVal(line *im.Property) (out TZidVal) {
+func ToTZidVal(line *cl.Property) (out TZidVal) {
 	return TZidVal{ToStringVal(line), strings.HasPrefix(line.Value, "/")}
 }
 
 type UTCOffsetVal DurVal
 
-func ToUTCOffsetVal(line *im.Property) (out UTCOffsetVal, err error) {
+func ToUTCOffsetVal(line *cl.Property) (out UTCOffsetVal, err error) {
 	out = UTCOffsetVal{}
 	out.OtherParam = line.Parameters
 	out.Value, err = util.ParseUTCOffset(line.Value)
 	return out, err
 }
 
-func (cp *CalParser) parseVTIMEZONE(comp *im.Component) (out *TimeZone, err error, err2 error) {
+func (cp *CalParser) parseVTIMEZONE(comp *cl.Component) (out *TimeZone, err error, err2 error) {
 	out = &TimeZone{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {
@@ -116,7 +117,7 @@ func (cp *CalParser) parseVTIMEZONE(comp *im.Component) (out *TimeZone, err erro
 	return
 }
 
-func (cp *CalParser) parseSDTime(comp *im.Component, isDaylight bool) (out *StandardDaylightTime, err error, err2 error) {
+func (cp *CalParser) parseSDTime(comp *cl.Component, isDaylight bool) (out *StandardDaylightTime, err error, err2 error) {
 	out = &StandardDaylightTime{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {

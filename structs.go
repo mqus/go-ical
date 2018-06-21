@@ -12,7 +12,7 @@ import (
 
 	"strconv"
 
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 	"github.com/mqus/go-ical/util"
 )
 
@@ -23,7 +23,7 @@ type Calendar struct {
 	Journals        []*Journal
 	FreeBusy        []*FreeBusy
 	TimeZones       map[string]*TimeZone
-	OtherComponents []*im.Component
+	OtherComponents []*cl.Component
 	//Properties
 	//required
 	ProdID  StringVal
@@ -31,7 +31,7 @@ type Calendar struct {
 	//optional
 	CalScale        *StringVal
 	Method          *StringVal
-	OtherProperties []*im.Property
+	OtherProperties []*cl.Property
 	//since RFC 7986:
 	Uid        *StringVal
 	LastMod    *DateTimeVal
@@ -54,7 +54,7 @@ type TextVal struct {
 	Lang string
 }
 
-func ToTextVal(line *im.Property) (TextVal, error) {
+func ToTextVal(line *cl.Property) (TextVal, error) {
 	var err error
 	out := TextVal{}
 	for name, values := range line.Parameters {
@@ -73,10 +73,10 @@ func ToTextVal(line *im.Property) (TextVal, error) {
 
 type StringVal struct {
 	Value      string
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToStringVal(line *im.Property) StringVal {
+func ToStringVal(line *cl.Property) StringVal {
 	return StringVal{line.Value, line.Parameters}
 }
 
@@ -84,11 +84,11 @@ type DateTimeVal struct {
 	Value      time.Time
 	Floating   bool
 	OnlyDate   bool
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToDateTimeVal(line *im.Property, isUtc bool) (DateTimeVal, error) {
+func (cp *CalParser) ToDateTimeVal(line *cl.Property, isUtc bool) (DateTimeVal, error) {
 	tstr := strings.Trim(line.Value, "Z")
 	var err error
 	out := DateTimeVal{}
@@ -113,10 +113,10 @@ func (cp *CalParser) ToDateTimeVal(line *im.Property, isUtc bool) (DateTimeVal, 
 
 type URIVal struct {
 	URI        *url.URL
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToURIVal(line *im.Property) (URIVal, error) {
+func ToURIVal(line *cl.Property) (URIVal, error) {
 	var err error
 	out := URIVal{}
 	out.OtherParam = line.Parameters
@@ -128,10 +128,10 @@ func ToURIVal(line *im.Property) (URIVal, error) {
 
 type DurVal struct {
 	Value      time.Duration
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToDurVal(line *im.Property) (DurVal, error) {
+func ToDurVal(line *cl.Property) (DurVal, error) {
 	var err error
 	out := DurVal{}
 	out.OtherParam = line.Parameters
@@ -152,7 +152,7 @@ type DataVal struct {
 }
 
 //TO?DO DisplayParam (new RFC)
-func ToDataVal(line *im.Property) (DataVal, error, error) {
+func ToDataVal(line *cl.Property) (DataVal, error, error) {
 	var err, err2 error
 	out := DataVal{}
 	out.OtherParam = line.Parameters
@@ -195,22 +195,22 @@ func ToDataVal(line *im.Property) (DataVal, error, error) {
 //MAYBE:eventually we will have to add minver and maxver, but for now this is enough.
 type Version StringVal
 
-func ToVersion(line *im.Property) Version {
+func ToVersion(line *cl.Property) Version {
 	return Version{line.Value, line.Parameters}
 }
 
 type ColorVal StringVal
 
-func ToColorVal(line *im.Property) ColorVal {
+func ToColorVal(line *cl.Property) ColorVal {
 	return ColorVal{line.Value, line.Parameters}
 }
 
 type Categories struct {
 	Values     []string
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToCategVal(line *im.Property) Categories {
+func ToCategVal(line *cl.Property) Categories {
 	return Categories{
 		strings.Split(line.Value, ","),
 		line.Parameters,
@@ -219,20 +219,20 @@ func ToCategVal(line *im.Property) Categories {
 
 type BoolVal struct {
 	Value      bool
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
 type FloatVal struct {
 	Value      float64
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
 type IntVal struct {
 	Value      int32
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToIntVal(line *im.Property) (out IntVal, err error) {
+func ToIntVal(line *cl.Property) (out IntVal, err error) {
 	out = IntVal{}
 	out.OtherParam = line.Parameters
 	i, err := strconv.ParseInt(line.Value, 10, 32)
@@ -247,11 +247,11 @@ type RecurrenceSetVal struct {
 	OnlyDate     bool
 	OnlyDateTime bool
 
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToRecurrenceSetVal(line *im.Property) (out RecurrenceSetVal, err error) {
+func (cp *CalParser) ToRecurrenceSetVal(line *cl.Property) (out RecurrenceSetVal, err error) {
 	//todo 	tstr := strings.Trim(line.Value, "Z")
 	out = RecurrenceSetVal{
 		From:         nil,
@@ -308,10 +308,10 @@ type TimeVal DateTimeVal
 
 type GeoVal struct {
 	Lat, Long  float64
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToGeoVal(line *im.Property) (out GeoVal, err error) {
+func ToGeoVal(line *cl.Property) (out GeoVal, err error) {
 	out = GeoVal{}
 	out.OtherParam = line.Parameters
 	latlongs := strings.SplitN(line.Value, ";", 2)
@@ -345,10 +345,10 @@ type PersonVal struct {
 	//from RFC7986 (section 6.2), when Address can not be used as an Email-Adress.
 	EMail string
 
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToPersonVal(line *im.Property) (out PersonVal, err, err2 error) {
+func ToPersonVal(line *cl.Property) (out PersonVal, err, err2 error) {
 	out = PersonVal{}
 	out.Address, err = url.Parse(line.Value)
 	if err != nil {
@@ -400,10 +400,10 @@ func ToPersonVal(line *im.Property) (out PersonVal, err, err2 error) {
 
 type ReqStatusVal struct {
 	Code, Text, Data string
-	OtherParam       im.Parameters
+	OtherParam       cl.Parameters
 }
 
-func ToReqStatusVal(line *im.Property) (out ReqStatusVal, err error) {
+func ToReqStatusVal(line *cl.Property) (out ReqStatusVal, err error) {
 	out = ReqStatusVal{}
 	out.OtherParam = line.Parameters
 	all := strings.SplitN(line.Value, ";", 3)
@@ -426,7 +426,7 @@ type ConferenceVal struct {
 	Lang     string
 }
 
-func ToConferenceVal(line *im.Property) (out ConferenceVal, err, err2 error) {
+func ToConferenceVal(line *cl.Property) (out ConferenceVal, err, err2 error) {
 	out = ConferenceVal{}
 	out.URI, err = url.Parse(line.Value)
 	if err != nil {
@@ -461,10 +461,10 @@ type TriggerVal struct {
 	Delay      *time.Duration
 	Time       *time.Time
 	RelToEnd   bool
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
-func ToTriggerVal(line *im.Property) (out TriggerVal, err, err2 error) {
+func ToTriggerVal(line *cl.Property) (out TriggerVal, err, err2 error) {
 	out = TriggerVal{
 		IsRelative: false,
 		Delay:      nil,
@@ -509,11 +509,11 @@ type FBVal struct {
 	For    []time.Duration
 	FBType string
 
-	OtherParam im.Parameters
+	OtherParam cl.Parameters
 }
 
 //TODO Timezones!!  (get the Timezone specified by the TZID param, found in VTIMEZONES
-func (cp *CalParser) ToFBVal(line *im.Property) (out FBVal, err error) {
+func (cp *CalParser) ToFBVal(line *cl.Property) (out FBVal, err error) {
 	//todo 	tstr := strings.Trim(line.Value, "Z")
 	out = FBVal{}
 	for name, values := range line.Parameters {
@@ -544,7 +544,7 @@ type RelationVal struct {
 	RelType string
 }
 
-func ToRelationVal(line *im.Property) (out RelationVal) {
+func ToRelationVal(line *cl.Property) (out RelationVal) {
 	for name, values := range line.Parameters {
 		switch name {
 		case paRelType:

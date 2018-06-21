@@ -1,7 +1,7 @@
 package go_ical
 
 import (
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 )
 
 // implements VALARM, specified in RFC5545, Section 3.6.6
@@ -22,11 +22,11 @@ type Alarm struct {
 	//Optional, at most one if ACTION=AUDIO
 	Attachments []*DataVal
 
-	OtherProperties []*im.Property
-	OtherComponents []*im.Component
+	OtherProperties []*cl.Property
+	//OtherComponents []*cl.Component
 }
 
-func (cp *CalParser) parseVALARM(comp *im.Component) (out *Alarm, err error, err2 error) {
+func (cp *CalParser) parseVALARM(comp *cl.Component) (out *Alarm, err error, err2 error) {
 	out = &Alarm{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {
@@ -102,7 +102,10 @@ func (cp *CalParser) parseVALARM(comp *im.Component) (out *Alarm, err error, err
 			out.OtherProperties = append(out.OtherProperties, prop)
 		}
 	}
-	out.OtherComponents = comp.Comps
+
+	//MAYBE don't silently discard other Components
+	//out.OtherComponents = comp.Comps
+
 	//TODO Conformance-checks:
 	// check if dur is set <=> repeat is set
 	// check if Desc/Summary/Attendee is set

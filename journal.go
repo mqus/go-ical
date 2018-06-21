@@ -1,7 +1,7 @@
 package go_ical
 
 import (
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 )
 
 type Journal struct {
@@ -39,15 +39,15 @@ type Journal struct {
 	RDate   []*RecurrenceSetVal
 	RStatus []*ReqStatusVal
 
-	OtherProperties []*im.Property
-	OtherComponents []*im.Component
+	OtherProperties []*cl.Property
+	//OtherComponents []*cl.Component
 
 	//since RFC 7986:
 	Color  *ColorVal
 	Images []*DataVal
 }
 
-func (cp *CalParser) parseVJOURNAL(comp *im.Component) (out *Journal, err error, err2 error) {
+func (cp *CalParser) parseVJOURNAL(comp *cl.Component) (out *Journal, err error, err2 error) {
 	out = &Journal{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {
@@ -253,6 +253,7 @@ func (cp *CalParser) parseVJOURNAL(comp *im.Component) (out *Journal, err error,
 	}
 	//MAYBE don't silently discard other Components
 	// out.OtherComponents = comp.Comps
+
 	//TODO Conformance Checking
 	return
 }

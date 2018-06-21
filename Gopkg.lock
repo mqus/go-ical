@@ -2,20 +2,19 @@
 
 
 [[projects]]
+  name = "github.com/mqus/go-contentline"
+  packages = ["."]
+  revision = "5bb9f79"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
-[[projects]]
-  branch = "master"
-  name = "github.com/soh335/icalparser"
-  packages = ["."]
-  revision = "b9945896ae4e045a7eaf495d3bfaa6b5258a1f2d"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e162f30e282cb89e7131c66bec2b6b4723c4ae8157713327bdb54f93c942c2f9"
+  inputs-digest = "3a87a35041cf82e2e85c753ac63caca0da987d144f32eb3a091dfd3a84c24435"
   solver-name = "gps-cdcl"
   solver-version = 1

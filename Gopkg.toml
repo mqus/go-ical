@@ -24,7 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
-required = ["github.com/soh335/icalparser", "github.com/pkg/errors"]
+#[[constraint]]
+#  name = "github.com/mqus/go-contentline"
+#  revision = "5bb9f79"
 
 [prune]
   go-tests = true

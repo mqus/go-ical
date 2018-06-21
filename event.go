@@ -3,7 +3,7 @@ package go_ical
 import (
 	"strings"
 
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 )
 
 type Event struct {
@@ -57,7 +57,7 @@ type Event struct {
 	//in this case a single TextVal can also be multiple comma-separated resources.
 	Resources       []*TextVal
 	RDate           []*RecurrenceSetVal
-	OtherProperties []*im.Property
+	OtherProperties []*cl.Property
 
 	//since RFC 7986:
 	Color      *ColorVal
@@ -65,7 +65,7 @@ type Event struct {
 	Conference []*ConferenceVal
 }
 
-func (cp *CalParser) parseVEVENT(comp *im.Component) (out *Event, err error, err2 error) {
+func (cp *CalParser) parseVEVENT(comp *cl.Component) (out *Event, err error, err2 error) {
 	out = &Event{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {

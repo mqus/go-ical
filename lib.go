@@ -1,16 +1,15 @@
 package go_ical
 
-import "github.com/soh335/icalparser"
 import (
 	"io"
 
 	"strings"
 
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 )
 
 type CalParser struct {
-	inner           *icalparser.Parser
+	inner           *cl.Parser
 	currentCalendar *Calendar
 	ComponentErrors chan<- error
 	PropertyErrors  chan<- error
@@ -23,7 +22,7 @@ type ICalOutputter interface {
 
 func NewParser(reader io.Reader, componentErrors, propertyErrors, parameterErrors chan<- error) CalParser {
 	return CalParser{
-		inner:           icalparser.NewParser(reader),
+		inner:           cl.InitParser(reader),
 		currentCalendar: nil,
 		ComponentErrors: componentErrors,
 		PropertyErrors:  propertyErrors,
@@ -32,11 +31,7 @@ func NewParser(reader io.Reader, componentErrors, propertyErrors, parameterError
 }
 
 func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
-	cobj, err := cp.inner.Parse()
-	if err != nil {
-		return nil, err
-	}
-	calcomp, err2 := im.ToIntermediate(cobj)
+	calcomp, err2 := cp.inner.ParseNextObject()
 	if err2 != nil {
 		return nil, err2
 	}

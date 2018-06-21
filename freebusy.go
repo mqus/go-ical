@@ -1,7 +1,7 @@
 package go_ical
 
 import (
-	"github.com/mqus/go-ical/im"
+	cl "github.com/mqus/go-contentline"
 )
 
 type FreeBusy struct {
@@ -23,11 +23,11 @@ type FreeBusy struct {
 	FreeBusy   []*FBVal
 	RStatus    []*ReqStatusVal
 
-	OtherProperties []*im.Property
-	OtherComponents []*im.Component
+	OtherProperties []*cl.Property
+	//OtherComponents []*cl.Component
 }
 
-func (cp *CalParser) parseVFREEBUSY(comp *im.Component) (out *FreeBusy, err error, err2 error) {
+func (cp *CalParser) parseVFREEBUSY(comp *cl.Component) (out *FreeBusy, err error, err2 error) {
 	out = &FreeBusy{}
 	for _, prop := range comp.Properties {
 		switch prop.Name {
