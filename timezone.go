@@ -92,7 +92,7 @@ func (cp *CalParser) parseVTIMEZONE(comp *cl.Component) (out *TimeZone, err erro
 
 	for _, subcomp := range comp.Comps {
 		isDaylight := false
-		switch strings.ToLower(subcomp.Name) {
+		switch subcomp.Name {
 		case vDaylight:
 			isDaylight = true
 			fallthrough

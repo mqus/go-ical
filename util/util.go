@@ -18,7 +18,7 @@ const (
 //MAYBE theoretically not a good equivalent, 1 Week may not be exactly 7*24 hours if this week e.g. crosses over a dst-boundary
 func ParseDuration(in string) (out time.Duration, err error) {
 	negative := false
-	parts := strings.SplitN(in, "P", 2)
+	parts := strings.SplitN(strings.ToUpper(in), "P", 2)
 	out = time.Duration(0)
 	if parts[0] == "-" {
 		negative = true
@@ -60,6 +60,7 @@ func ParseDuration(in string) (out time.Duration, err error) {
 	return
 }
 
+//s must be UpperCase
 func parseDay(s string) (time.Duration, error) {
 	if !strings.HasSuffix(s, "D") {
 		return 0, errors.New("Expected D as Suffix: " + s)
@@ -73,6 +74,7 @@ func parseDay(s string) (time.Duration, error) {
 
 }
 
+//s must be UpperCase
 func ParsePeriod(s string) (from time.Time, dur time.Duration, err error) {
 	vals := strings.SplitN(s, "/", 2)
 	from, err = time.Parse(ISO8601_2004, strings.Trim(vals[0], "Z"))
@@ -118,5 +120,4 @@ func ParseUTCOffset(s string) (out time.Duration, err error) {
 	//include previously parsed sign
 	out = negpos * out
 	return
-
 }

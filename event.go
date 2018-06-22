@@ -1,8 +1,6 @@
 package go_ical
 
 import (
-	"strings"
-
 	cl "github.com/mqus/go-contentline"
 )
 
@@ -349,7 +347,7 @@ func (cp *CalParser) parseVEVENT(comp *cl.Component) (out *Event, err error, err
 	}
 
 	for _, subcomp := range comp.Comps {
-		switch strings.ToLower(subcomp.Name) {
+		switch subcomp.Name {
 		case vAl:
 			al, e1, e2 := cp.parseVALARM(subcomp)
 			if e1 != nil {

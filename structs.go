@@ -96,7 +96,7 @@ func (cp *CalParser) ToDateTimeVal(line *cl.Property, isUtc bool) (DateTimeVal, 
 	for name, values := range line.Parameters {
 		switch name {
 		case paValue:
-			out.OnlyDate = strings.ToLower(values[0]) == tDate
+			out.OnlyDate = strings.ToUpper(values[0]) == tDate
 		default:
 			out.OtherParam[name] = values
 		}
@@ -265,7 +265,7 @@ func (cp *CalParser) ToRecurrenceSetVal(line *cl.Property) (out RecurrenceSetVal
 	for name, values := range line.Parameters {
 		switch name {
 		case paValue:
-			vtype = strings.ToLower(values[0])
+			vtype = strings.ToUpper(values[0])
 		default:
 			out.OtherParam[name] = values
 		}
@@ -376,9 +376,9 @@ func ToPersonVal(line *cl.Property) (out PersonVal, err, err2 error) {
 		case paPartStat:
 			out.PartStat = values[0]
 		case paRSVP:
-			if strings.ToLower(values[0]) == "true" {
+			if strings.ToUpper(values[0]) == "TRUE" {
 				out.RSvp = true
-			} else if strings.ToLower(values[0]) == "false" {
+			} else if strings.ToUpper(values[0]) == "FALSE" {
 				out.RSvp = false
 			} else {
 				err2 = errors.New("RSVP has to be either TRUE or FALSE :" + line.BeforeParsing())
@@ -437,7 +437,7 @@ func ToConferenceVal(line *cl.Property) (out ConferenceVal, err, err2 error) {
 	for name, values := range line.Parameters {
 		switch name {
 		case paValue:
-			valtype = strings.ToLower(values[0])
+			valtype = strings.ToUpper(values[0])
 		case paFeature:
 			//out.Features = strings.Split(strings.ToLower(pval), ",")
 			out.Features = values
@@ -450,7 +450,7 @@ func ToConferenceVal(line *cl.Property) (out ConferenceVal, err, err2 error) {
 			out.OtherParam[name] = values
 		}
 	}
-	if valtype != "URI" {
+	if valtype != tURI {
 		err2 = errors.New("VALUE must be defined as URI: " + line.BeforeParsing())
 	}
 	return
@@ -477,12 +477,12 @@ func ToTriggerVal(line *cl.Property) (out TriggerVal, err, err2 error) {
 	for name, values := range line.Parameters {
 		switch name {
 		case paValue:
-			valtype = strings.ToLower(values[0])
+			valtype = strings.ToUpper(values[0])
 		case paTrRel:
-			val := strings.ToLower(values[0])
-			if val == "end" {
+			val := strings.ToUpper(values[0])
+			if val == "END" {
 				out.RelToEnd = true
-			} else if val != "start" {
+			} else if val != "START" {
 				err2 = errors.New("RELATED - property must be START or END but was " + val + ": " + line.BeforeParsing())
 			}
 		default:

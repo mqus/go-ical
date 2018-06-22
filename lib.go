@@ -3,8 +3,6 @@ package go_ical
 import (
 	"io"
 
-	"strings"
-
 	cl "github.com/mqus/go-contentline"
 )
 
@@ -136,7 +134,7 @@ func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
 
 	//first parse all TimeZone components, to enable assigning accurate times for all components.
 	for _, comp := range calcomp.Comps {
-		if strings.ToLower(comp.Name) == vTZ {
+		if comp.Name == vTZ {
 			x, err, err2 := cp.parseVTIMEZONE(comp)
 			if err != nil {
 				//MAYBE return err
@@ -153,7 +151,7 @@ func (cp *CalParser) ParseCalendar() (out *Calendar, err error) {
 
 	//then all other components
 	for _, comp := range calcomp.Comps {
-		switch strings.ToLower(comp.Name) {
+		switch comp.Name {
 		case vEv:
 			x, err, err2 := cp.parseVEVENT(comp)
 			if err != nil {
